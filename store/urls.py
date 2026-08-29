@@ -6,7 +6,7 @@ from .views import (
     ProductViewSet,
     OrderViewSet,
     OrderItemViewSet,
-    AddressViewSet
+    AddressViewSet,
 )
 
 
@@ -14,27 +14,32 @@ router = DefaultRouter()
 
 router.register(
     'categories',
-    CategoryViewSet
+    CategoryViewSet,
+    basename='category'
 )
 
 router.register(
     'products',
-    ProductViewSet
+    ProductViewSet,
+    basename='product'
 )
 
 router.register(
     'orders',
-    OrderViewSet
+    OrderViewSet,
+    basename='order'
 )
 
 router.register(
     'order-items',
-    OrderItemViewSet
+    OrderItemViewSet,
+    basename='order-item'
 )
 
 router.register(
     'addresses',
-    AddressViewSet
+    AddressViewSet,
+    basename='address'
 )
 
 
