@@ -84,19 +84,30 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Aplique as migrações
+### 4. Configure as variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
+
+```dotenv
+SECRET_KEY=sua-chave-secreta-aqui
+DEBUG=True
+```
+
+> A `SECRET_KEY` pode ser qualquer string longa e aleatória para uso em desenvolvimento. O projeto usa o SQLite padrão do Django, então não é necessário configurar variáveis de banco de dados externo.
+
+### 5. Aplique as migrações
 
 ```bash
 python manage.py migrate
 ```
 
-### 5. Crie um superusuário (opcional, para acessar o admin)
+### 6. Crie um superusuário (opcional, para acessar o admin)
 
 ```bash
 python manage.py createsuperuser
 ```
 
-### 6. Rode o servidor
+### 7. Rode o servidor
 
 ```bash
 python manage.py runserver
