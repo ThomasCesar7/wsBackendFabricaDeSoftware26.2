@@ -1,6 +1,8 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
+from store.views import home
+
 from .views import (
     CategoryViewSet,
     ProductViewSet,
@@ -52,5 +54,3 @@ urlpatterns = router.urls + [
         name='cep'
     )
 ]
-
-

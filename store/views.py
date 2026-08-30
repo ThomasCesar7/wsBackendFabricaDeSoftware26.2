@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from django.shortcuts import render
+
 from .models import (
     Category,
     Product,
@@ -100,3 +102,7 @@ def cep_view(request, cep):
         resultado,
         status=status.HTTP_200_OK
     )
+
+
+def home(request):
+    return render(request, 'index.html')

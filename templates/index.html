@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DevStore</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+        }
+
+        header {
+            background: #222;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+        }
+
+        button {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #222;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .logout {
+            background: #c0392b;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .login {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px #ccc;
+        }
+
+        .login h2 {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px;
+            margin: 8px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-container {
+            background: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .form-container h2 {
+            margin-bottom: 15px;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .product {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px #ddd;
+        }
+
+        .product h3 {
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stock {
+            margin-bottom: 15px;
+        }
+
+        .delete {
+            background: #c0392b;
+        }
+
+        .edit {
+            background: #2980b9;
+            margin-right: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOGIN -->
+
+    <section id="loginScreen" class="login">
+
+        <h2>DevStore</h2>
+
+        <p>Faça login para continuar</p>
+
+        <br>
+
+        <input
+            type="text"
+            id="username"
+            placeholder="Usuário"
+        >
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Senha"
+        >
+
+        <button onclick="login()">
+            Entrar
+        </button>
+
+        <p id="loginMessage"></p>
+
+    </section>
+
+
+    <!-- SISTEMA -->
+
+    <div id="app" class="hidden">
+
+        <header>
+
+            <h1>DevStore</h1>
+
+            <button
+                class="logout"
+                onclick="logout()"
+            >
+                Sair
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <div id="message" class="message hidden"></div>
+
+
+            <!-- CADASTRO DE PRODUTO -->
+
+            <section class="form-container">
+
+                <h2 id="formTitle">
+                    Adicionar produto
+                </h2>
+
+                <input
+                    type="text"
+                    id="productName"
+                    placeholder="Nome do produto"
+                >
+
+                <input
+                    type="text"
+                    id="productDescription"
+                    placeholder="Descrição"
+                >
+
+                <input
+                    type="number"
+                    id="productPrice"
+                    placeholder="Preço"
+                    step="0.01"
+                >
+
+                <input
+                    type="number"
+                    id="productStock"
+                    placeholder="Estoque"
+                >
+
+                <input
+                    type="number"
+                    id="productCategory"
+                    placeholder="ID da categoria"
+                >
+
+                <button onclick="saveProduct()">
+                    Salvar produto
+                </button>
+
+                <button
+                    onclick="cancelEdit()"
+                    id="cancelButton"
+                    class="hidden"
+                >
+                    Cancelar
+                </button>
+
+            </section>
+
+
+            <!-- PRODUTOS -->
+
+            <section>
+
+                <h2>Produtos</h2>
+
+                <br>
+
+                <button onclick="loadProducts()">
+                    Atualizar produtos
+                </button>
+
+                <br><br>
+
+                <div
+                    id="products"
+                    class="products"
+                ></div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+<script>
+
+    let token = localStorage.getItem("access_token");
+
+    let editingProduct = null;
+
+
+    // LOGIN
+
+    async function login() {
+
+        const username =
+            document.getElementById("username").value;
+
+        const password =
+            document.getElementById("password").value;
+
+
+        try {
+
+            const response = await fetch(
+                "/api/auth/login/",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                }
+            );
+
+
+            const data = await response.json();
+
+
+            if (!response.ok) {
+
+                document.getElementById(
+                    "loginMessage"
+                ).innerText = "Usuário ou senha inválidos.";
+
+                return;
+            }
+
+
+            localStorage.setItem(
+                "access_token",
+                data.access
+            );
+
+
+            token = data.access;
+
+
+            showApp();
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    }
+
+
+    // MOSTRAR SISTEMA
+
+    function showApp() {
+
+        document
+            .getElementById("loginScreen")
+            .classList.add("hidden");
+
+        document
+            .getElementById("app")
+            .classList.remove("hidden");
+
+        loadProducts();
+
+    }
+
+
+    // LOGOUT
+
+    function logout() {
+
+        localStorage.removeItem(
+            "access_token"
+        );
+
+        token = null;
+
+        location.reload();
+
+    }
+
+
+    // LISTAR PRODUTOS
+
+    async function loadProducts() {
+
+        const response = await fetch(
+            "/api/products/",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+
+        if (response.status === 401) {
+
+            logout();
+
+            return;
+        }
+
+
+        const products =
+            await response.json();
+
+
+        const container =
+            document.getElementById("products");
+
+
+        container.innerHTML = "";
+
+
+        products.forEach(product => {
+
+            const card =
+                document.createElement("div");
+
+            card.className = "product";
+
+
+            card.innerHTML = `
+
+                <h3>
+                    ${product.name}
+                </h3>
+
+                <p>
+                    ${product.description}
+                </p>
+
+                <p class="price">
+                    R$ ${product.price}
+                </p>
+
+                <p class="stock">
+                    Estoque: ${product.stock}
+                </p>
+
+                <button
+                    class="edit"
+                    onclick="editProduct(
+                        ${product.id},
+                        '${product.name.replace(/'/g, "\\'")}',
+                        '${product.description.replace(/'/g, "\\'")}',
+                        '${product.price}',
+                        ${product.stock},
+                        ${product.category}
+                    )"
+                >
+                    Editar
+                </button>
+
+                <button
+                    class="delete"
+                    onclick="deleteProduct(${product.id})"
+                >
+                    Excluir
+                </button>
+
+            `;
+
+
+            container.appendChild(card);
+
+        });
+
+    }
+
+
+    // ADICIONAR / EDITAR
+
+    async function saveProduct() {
+
+        const name =
+            document.getElementById(
+                "productName"
+            ).value;
+
+        const description =
+            document.getElementById(
+                "productDescription"
+            ).value;
+
+        const price =
+            document.getElementById(
+                "productPrice"
+            ).value;
+
+        const stock =
+            document.getElementById(
+                "productStock"
+            ).value;
+
+        const category =
+            document.getElementById(
+                "productCategory"
+            ).value;
+
+
+        const product = {
+
+            name: name,
+
+            description: description,
+
+            price: price,
+
+            stock: stock,
+
+            category: category
+
+        };
+
+
+        let url = "/api/products/";
+
+        let method = "POST";
+
+
+        if (editingProduct !== null) {
+
+            url += editingProduct + "/";
+
+            method = "PUT";
+
+        }
+
+
+        const response = await fetch(
+            url,
+            {
+                method: method,
+
+                headers: {
+                    "Content-Type": "application/json",
+
+                    "Authorization":
+                        `Bearer ${token}`
+                },
+
+                body: JSON.stringify(product)
+            }
+        );
+
+
+        if (response.ok) {
+
+            showMessage(
+                "Produto salvo com sucesso!"
+            );
+
+            clearForm();
+
+            loadProducts();
+
+        } else {
+
+            const data =
+                await response.json();
+
+            console.error(data);
+
+            showMessage(
+                "Erro ao salvar produto."
+            );
+
+        }
+
+    }
+
+
+    // EDITAR
+
+    function editProduct(
+        id,
+        name,
+        description,
+        price,
+        stock,
+        category
+    ) {
+
+        editingProduct = id;
+
+
+        document.getElementById(
+            "formTitle"
+        ).innerText = "Editar produto";
+
+
+        document.getElementById(
+            "productName"
+        ).value = name;
+
+
+        document.getElementById(
+            "productDescription"
+        ).value = description;
+
+
+        document.getElementById(
+            "productPrice"
+        ).value = price;
+
+
+        document.getElementById(
+            "productStock"
+        ).value = stock;
+
+
+        document.getElementById(
+            "productCategory"
+        ).value = category;
+
+
+        document.getElementById(
+            "cancelButton"
+        ).classList.remove("hidden");
+
+    }
+
+
+    // CANCELAR EDIÇÃO
+
+    function cancelEdit() {
+
+        editingProduct = null;
+
+        clearForm();
+
+    }
+
+
+    // LIMPAR FORMULÁRIO
+
+    function clearForm() {
+
+        document.getElementById(
+            "formTitle"
+        ).innerText = "Adicionar produto";
+
+
+        document.getElementById(
+            "productName"
+        ).value = "";
+
+
+        document.getElementById(
+            "productDescription"
+        ).value = "";
+
+
+        document.getElementById(
+            "productPrice"
+        ).value = "";
+
+
+        document.getElementById(
+            "productStock"
+        ).value = "";
+
+
+        document.getElementById(
+            "productCategory"
+        ).value = "";
+
+
+        document.getElementById(
+            "cancelButton"
+        ).classList.add("hidden");
+
+
+        editingProduct = null;
+
+    }
+
+
+    // EXCLUIR
+
+    async function deleteProduct(id) {
+
+        if (
+            !confirm(
+                "Deseja realmente excluir este produto?"
+            )
+        ) {
+            return;
+        }
+
+
+        const response = await fetch(
+            `/api/products/${id}/`,
+            {
+                method: "DELETE",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        if (response.ok) {
+
+            showMessage(
+                "Produto excluído com sucesso!"
+            );
+
+            loadProducts();
+
+        } else {
+
+            showMessage(
+                "Não foi possível excluir o produto."
+            );
+
+        }
+
+    }
+
+
+    // MENSAGEM
+
+    function showMessage(text) {
+
+        const message =
+            document.getElementById("message");
+
+
+        message.innerText = text;
+
+        message.classList.remove(
+            "hidden"
+        );
+
+
+        setTimeout(() => {
+
+            message.classList.add(
+                "hidden"
+            );
+
+        }, 3000);
+
+    }
+
+
+    // VERIFICAR LOGIN AO ABRIR
+
+    if (token) {
+
+        showApp();
+
+    }
+
+</script>
+
+</body>
+
+</html>
