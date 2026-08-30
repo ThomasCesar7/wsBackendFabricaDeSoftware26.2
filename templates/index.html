@@ -77,6 +77,11 @@
             border-radius: 5px;
         }
 
+        input[readonly] {
+            background: #eee;
+            color: #555;
+        }
+
         .form-container {
             background: white;
             padding: 20px;
@@ -134,6 +139,30 @@
             border-radius: 5px;
             background: #ddd;
         }
+
+        .toggle-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #2980b9;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .cep-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .cep-row input {
+            flex: 1;
+        }
+
+        .cep-row button {
+            height: 44px;
+            margin-top: 8px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 
@@ -166,6 +195,100 @@
         </button>
 
         <p id="loginMessage"></p>
+
+        <span
+            class="toggle-link"
+            onclick="showRegister()"
+        >
+            Não tem conta? Cadastre-se
+        </span>
+
+    </section>
+
+
+    <!-- CADASTRO -->
+
+    <section id="registerScreen" class="login hidden">
+
+        <h2>Criar conta</h2>
+
+        <p>Preencha seus dados</p>
+
+        <br>
+
+        <input
+            type="text"
+            id="regUsername"
+            placeholder="Usuário"
+        >
+
+        <input
+            type="email"
+            id="regEmail"
+            placeholder="Email"
+        >
+
+        <input
+            type="password"
+            id="regPassword"
+            placeholder="Senha"
+        >
+
+        <div class="cep-row">
+
+            <input
+                type="text"
+                id="regCep"
+                placeholder="CEP (somente números)"
+                maxlength="8"
+            >
+
+            <button onclick="buscarCep()">
+                Buscar
+            </button>
+
+        </div>
+
+        <input
+            type="text"
+            id="regRua"
+            placeholder="Rua"
+            readonly
+        >
+
+        <input
+            type="text"
+            id="regBairro"
+            placeholder="Bairro"
+            readonly
+        >
+
+        <input
+            type="text"
+            id="regCidade"
+            placeholder="Cidade"
+            readonly
+        >
+
+        <input
+            type="text"
+            id="regEstado"
+            placeholder="Estado"
+            readonly
+        >
+
+        <button onclick="register()">
+            Cadastrar
+        </button>
+
+        <p id="registerMessage"></p>
+
+        <span
+            class="toggle-link"
+            onclick="showLogin()"
+        >
+            Já tem conta? Fazer login
+        </span>
 
     </section>
 
@@ -280,6 +403,177 @@
     let editingProduct = null;
 
 
+    // ALTERNAR ENTRE LOGIN E CADASTRO
+
+    function showRegister() {
+
+        document
+            .getElementById("loginScreen")
+            .classList.add("hidden");
+
+        document
+            .getElementById("registerScreen")
+            .classList.remove("hidden");
+
+    }
+
+
+    function showLogin() {
+
+        document
+            .getElementById("registerScreen")
+            .classList.add("hidden");
+
+        document
+            .getElementById("loginScreen")
+            .classList.remove("hidden");
+
+    }
+
+
+    // BUSCAR CEP
+
+    async function buscarCep() {
+
+        const cep =
+            document.getElementById("regCep").value.trim();
+
+
+        if (cep.length !== 8) {
+
+            document.getElementById(
+                "registerMessage"
+            ).innerText = "Digite um CEP com 8 números.";
+
+            return;
+        }
+
+
+        try {
+
+            const response = await fetch(
+                `/api/cep/${cep}/`
+            );
+
+
+            const data = await response.json();
+
+
+            if (!response.ok) {
+
+                document.getElementById(
+                    "registerMessage"
+                ).innerText = data.detail || "CEP inválido.";
+
+                document.getElementById("regRua").value = "";
+                document.getElementById("regBairro").value = "";
+                document.getElementById("regCidade").value = "";
+                document.getElementById("regEstado").value = "";
+
+                return;
+            }
+
+
+            document.getElementById(
+                "regRua"
+            ).value = data.logradouro || "";
+
+            document.getElementById(
+                "regBairro"
+            ).value = data.bairro || "";
+
+            document.getElementById(
+                "regCidade"
+            ).value = data.localidade || "";
+
+            document.getElementById(
+                "regEstado"
+            ).value = data.estado || data.uf || "";
+
+            document.getElementById(
+                "registerMessage"
+            ).innerText = "";
+
+        } catch (error) {
+
+            console.error(error);
+
+            document.getElementById(
+                "registerMessage"
+            ).innerText = "Erro ao consultar o CEP.";
+
+        }
+
+    }
+
+
+    // CADASTRAR USUÁRIO
+
+    async function register() {
+
+        const username =
+            document.getElementById("regUsername").value;
+
+        const email =
+            document.getElementById("regEmail").value;
+
+        const password =
+            document.getElementById("regPassword").value;
+
+
+        try {
+
+            const response = await fetch(
+                "/api/auth/register/",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password
+                    })
+                }
+            );
+
+
+            const data = await response.json();
+
+
+            if (!response.ok) {
+
+                const firstError =
+                    Object.values(data)[0];
+
+                document.getElementById(
+                    "registerMessage"
+                ).innerText = Array.isArray(firstError)
+                    ? firstError[0]
+                    : "Erro ao cadastrar.";
+
+                return;
+            }
+
+
+            document.getElementById(
+                "registerMessage"
+            ).innerText = "Cadastro realizado! Faça login.";
+
+            setTimeout(showLogin, 1500);
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    }
+
+
     // LOGIN
 
     async function login() {
@@ -349,6 +643,10 @@
 
         document
             .getElementById("loginScreen")
+            .classList.add("hidden");
+
+        document
+            .getElementById("registerScreen")
             .classList.add("hidden");
 
         document

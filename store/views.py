@@ -84,8 +84,10 @@ from rest_framework import status
 
 from .services import consultar_cep
 
+from rest_framework.permissions import AllowAny
+
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def cep_view(request, cep):
 
     resultado = consultar_cep(cep)
