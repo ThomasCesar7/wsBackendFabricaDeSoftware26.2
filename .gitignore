@@ -3,6 +3,7 @@ venv/
 
 # Banco de dados local
 *.sqlite3
+db.sqlite3
 
 # Variáveis de ambiente
 .env
