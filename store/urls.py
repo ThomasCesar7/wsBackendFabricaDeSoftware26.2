@@ -7,6 +7,7 @@ from .views import (
     OrderViewSet,
     OrderItemViewSet,
     AddressViewSet,
+    cep_view
 )
 
 
@@ -43,4 +44,13 @@ router.register(
 )
 
 
-urlpatterns = router.urls
+
+urlpatterns = router.urls + [
+    path(
+        'cep/<str:cep>/',
+        cep_view,
+        name='cep'
+    )
+]
+
+

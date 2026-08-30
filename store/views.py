@@ -68,3 +68,35 @@ class AddressViewSet(viewsets.ModelViewSet):
         serializer.save(
             user=self.request.user
         )
+
+
+# ---------------------------------------------
+
+from rest_framework.decorators import (
+    api_view,
+    permission_classes
+)
+
+from rest_framework.response import Response
+from rest_framework import status
+
+from .services import consultar_cep
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cep_view(request, cep):
+
+    resultado = consultar_cep(cep)
+
+    if resultado is None:
+        return Response(
+            {
+                'detail': 'CEP inválido.'
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response(
+        resultado,
+        status=status.HTTP_200_OK
+    )
